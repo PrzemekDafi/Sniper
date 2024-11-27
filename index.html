@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MilDot Spotter</title>
+    <title>Mil-Dot Spotter</title>
     <style>
         body {
             margin: 0;
@@ -39,34 +39,24 @@
     <video id="camera" autoplay playsinline></video>
     <div id="reticle">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" preserveAspectRatio="xMidYMid meet">
-            <!-- Siatka Mil-Dot tutaj -->
-            <line x1="-10" y1="0" x2="10" y2="0" stroke="black" stroke-width="0.02" />
-            <line x1="0" y1="-10" x2="0" y2="10" stroke="black" stroke-width="0.02" />
-            <circle cx="1" cy="0" r="0.1" fill="black" />
-            <circle cx="2" cy="0" r="0.1" fill="black" />
-            <circle cx="-1" cy="0" r="0.1" fill="black" />
-            <circle cx="-2" cy="0" r="0.1" fill="black" />
-            <circle cx="0" cy="1" r="0.1" fill="black" />
-            <circle cx="0" cy="2" r="0.1" fill="black" />
-            <circle cx="0" cy="-1" r="0.1" fill="black" />
-            <circle cx="0" cy="-2" r="0.1" fill="black" />
-        </svg>
-    </div>
-    <script>
-        const video = document.getElementById('camera');
+            <!-- Krzyż -->
+            <line x1="-10" y1="0" x2="10" y2="0" stroke="black" stroke-width="0.1" />
+            <line x1="0" y1="-10" x2="0" y2="10" stroke="black" stroke-width="0.1" />
 
-        // Funkcja do wybrania tylnej kamery
-        async function startCamera() {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(device => device.kind === 'videoinput');
-                let backCamera = videoDevices.find(device => device.label.toLowerCase().includes('back')) || videoDevices[0];
-
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { deviceId: backCamera.deviceId ? { exact: backCamera.deviceId } : undefined }
-                });
-
-                video.srcObject = stream;
-            } catch (error) {
-                console.error('Error accessing the camera:', error);
-                alert('Unable to
+            <!-- Mil-Dot - poziomo -->
+            <circle cx="-8" cy="0" r="0.2" fill="black" />
+            <circle cx="-7" cy="0" r="0.2" fill="black" />
+            <circle cx="-6" cy="0" r="0.2" fill="black" />
+            <circle cx="-5" cy="0" r="0.2" fill="black" />
+            <circle cx="-4" cy="0" r="0.2" fill="black" />
+            <circle cx="-3" cy="0" r="0.2" fill="black" />
+            <circle cx="-2" cy="0" r="0.2" fill="black" />
+            <circle cx="-1" cy="0" r="0.2" fill="black" />
+            <circle cx="1" cy="0" r="0.2" fill="black" />
+            <circle cx="2" cy="0" r="0.2" fill="black" />
+            <circle cx="3" cy="0" r="0.2" fill="black" />
+            <circle cx="4" cy="0" r="0.2" fill="black" />
+            <circle cx="5" cy="0" r="0.2" fill="black" />
+            <circle cx="6" cy="0" r="0.2" fill="black" />
+            <circle cx="7" cy="0" r="0.2" fill="black" />
+            <circle cx="8" cy="0" r="0
