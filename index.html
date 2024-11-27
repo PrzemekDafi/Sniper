@@ -50,7 +50,7 @@
             try {
                 const constraints = {
                     video: {
-                        facingMode: "environment" // Użycie tylnej kamery
+                        facingMode: "environment" // Tylna kamera
                     }
                 };
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -61,11 +61,13 @@
                     const videoHeight = video.videoHeight;
                     const aspectRatio = videoWidth / videoHeight;
 
-                    // Zakładany FOV kamery (60° poziomo - popraw, jeśli znasz dane kamery)
+                    console.log(`Kamera włączona. Proporcje: ${aspectRatio}`);
+                    
+                    // Zakładamy przykładowy FOV kamery (np. 60 stopni w poziomie, zmień jeśli znasz dane urządzenia)
                     const horizontalFOV = 60; // Stopnie
                     const verticalFOV = horizontalFOV / aspectRatio;
 
-                    drawMilDot(aspectRatio, horizontalFOV, verticalFOV, videoWidth, videoHeight);
+                    drawMilDot(aspectRatio, horizontalFOV, verticalFOV);
                 });
             } catch (error) {
                 console.error('Nie udało się uruchomić kamery:', error);
@@ -73,57 +75,63 @@
             }
         }
 
-        function drawMilDot(aspectRatio, horizontalFOV, verticalFOV, videoWidth, videoHeight) {
+        function drawMilDot(aspectRatio, horizontalFOV, verticalFOV) {
             const milsPerDegree = 17.4533; // Przelicznik stopni na miliradiany
             const horizontalMils = horizontalFOV * milsPerDegree; // Szerokość w milsach
             const verticalMils = verticalFOV * milsPerDegree; // Wysokość w milsach
             const dotSpacing = 1; // Odstęp między środkami kropek w milsach
             const dotRadius = 0.2 / 2; // Promień kropki (0.2 mils średnicy)
 
-            // Skalowanie siatki na podstawie proporcji kamery
-            const scaleX = videoWidth / horizontalMils;
-            const scaleY = videoHeight / verticalMils;
-            const scale = Math.min(scaleX, scaleY); // Zachowanie proporcji
+            // Ustawiamy właściwy widok SVG
+            reticle.setAttribute('viewBox', `-${horizontalMils / 2} -${verticalMils / 2} ${horizontalMils} ${verticalMils}`);
 
             // Czyścimy siatkę
             while (reticle.firstChild) {
                 reticle.removeChild(reticle.firstChild);
             }
 
-            // Rysowanie siatki Mil-Dot
-            for (let y = -10; y <= 10; y++) {
-                for (let x = -10; x <= 10; x++) {
-                    if (x === 0 && y === 0) continue; // Pomijamy środek (główne krzyże są rysowane osobno)
-
-                    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    dot.setAttribute("cx", x * dotSpacing * scale);
-                    dot.setAttribute("cy", y * dotSpacing * scale);
-                    dot.setAttribute("r", dotRadius * scale);
-                    dot.setAttribute("fill", "red");
-                    reticle.appendChild(dot);
-                }
-            }
-
             // Linie główne (pozioma i pionowa)
             const mainLineX = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            mainLineX.setAttribute("x1", -videoWidth / 2);
+            mainLineX.setAttribute("x1", -horizontalMils / 2);
             mainLineX.setAttribute("y1", 0);
-            mainLineX.setAttribute("x2", videoWidth / 2);
+            mainLineX.setAttribute("x2", horizontalMils / 2);
             mainLineX.setAttribute("y2", 0);
             mainLineX.setAttribute("stroke", "red");
-            mainLineX.setAttribute("stroke-width", 2);
+            mainLineX.setAttribute("stroke-width", 0.1);
             reticle.appendChild(mainLineX);
 
             const mainLineY = document.createElementNS("http://www.w3.org/2000/svg", "line");
             mainLineY.setAttribute("x1", 0);
-            mainLineY.setAttribute("y1", -videoHeight / 2);
+            mainLineY.setAttribute("y1", -verticalMils / 2);
             mainLineY.setAttribute("x2", 0);
-            mainLineY.setAttribute("y2", videoHeight / 2);
+            mainLineY.setAttribute("y2", verticalMils / 2);
             mainLineY.setAttribute("stroke", "red");
-            mainLineY.setAttribute("stroke-width", 2);
+            mainLineY.setAttribute("stroke-width", 0.1);
             reticle.appendChild(mainLineY);
+
+            // Rysowanie kropek
+            for (let i = -10; i <= 10; i++) {
+                if (i !== 0) {
+                    // Poziome kropki
+                    const dotX = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dotX.setAttribute("cx", i * dotSpacing);
+                    dotX.setAttribute("cy", 0);
+                    dotX.setAttribute("r", dotRadius);
+                    dotX.setAttribute("fill", "red");
+                    reticle.appendChild(dotX);
+
+                    // Pionowe kropki
+                    const dotY = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dotY.setAttribute("cx", 0);
+                    dotY.setAttribute("cy", i * dotSpacing);
+                    dotY.setAttribute("r", dotRadius);
+                    dotY.setAttribute("fill", "red");
+                    reticle.appendChild(dotY);
+                }
+            }
         }
 
+        // Start kamery i rysowanie siatki
         startCamera();
     </script>
 </body>
