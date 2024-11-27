@@ -61,9 +61,7 @@
                     const videoHeight = video.videoHeight;
                     const aspectRatio = videoWidth / videoHeight;
 
-                    console.log(`Kamera włączona. Proporcje: ${aspectRatio}`);
-                    
-                    // Zakładamy przykładowy FOV kamery (np. 60 stopni w poziomie, zmień jeśli znasz dane urządzenia)
+                    // Zakładamy przykładowy FOV kamery (60 stopni poziomo, jeśli znasz parametry aparatu, zaktualizuj je)
                     const horizontalFOV = 60; // Stopnie
                     const verticalFOV = horizontalFOV / aspectRatio;
 
@@ -90,6 +88,22 @@
                 reticle.removeChild(reticle.firstChild);
             }
 
+            // Rysowanie siatki Mil-Dot
+            for (let y = -10; y <= 10; y++) {
+                for (let x = -10; x <= 10; x++) {
+                    if (x === 0 && y === 0) continue; // Pomijamy środek (główne krzyże są rysowane osobno)
+
+                    if (x === 0 || y === 0 || Math.abs(x) % 1 === 0 || Math.abs(y) % 1 === 0) {
+                        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        dot.setAttribute("cx", x * dotSpacing);
+                        dot.setAttribute("cy", y * dotSpacing);
+                        dot.setAttribute("r", dotRadius);
+                        dot.setAttribute("fill", "red");
+                        reticle.appendChild(dot);
+                    }
+                }
+            }
+
             // Linie główne (pozioma i pionowa)
             const mainLineX = document.createElementNS("http://www.w3.org/2000/svg", "line");
             mainLineX.setAttribute("x1", -horizontalMils / 2);
@@ -108,30 +122,8 @@
             mainLineY.setAttribute("stroke", "red");
             mainLineY.setAttribute("stroke-width", 0.1);
             reticle.appendChild(mainLineY);
-
-            // Rysowanie kropek
-            for (let i = -10; i <= 10; i++) {
-                if (i !== 0) {
-                    // Poziome kropki
-                    const dotX = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    dotX.setAttribute("cx", i * dotSpacing);
-                    dotX.setAttribute("cy", 0);
-                    dotX.setAttribute("r", dotRadius);
-                    dotX.setAttribute("fill", "red");
-                    reticle.appendChild(dotX);
-
-                    // Pionowe kropki
-                    const dotY = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    dotY.setAttribute("cx", 0);
-                    dotY.setAttribute("cy", i * dotSpacing);
-                    dotY.setAttribute("r", dotRadius);
-                    dotY.setAttribute("fill", "red");
-                    reticle.appendChild(dotY);
-                }
-            }
         }
 
-        // Start kamery i rysowanie siatki
         startCamera();
     </script>
 </body>
