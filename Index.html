@@ -3,84 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mildot Spotter</title>
+    <title>MilDot Spotter</title>
     <style>
-        body {
+        body, html {
             margin: 0;
+            padding: 0;
             overflow: hidden;
+            background: black;
         }
-        video, canvas {
+        #camera {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             object-fit: cover;
         }
-        canvas {
-            pointer-events: none; /* Umożliwia interakcję tylko z wideo */
+        #mildot-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+        }
+        .dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 255, 0, 0.7);
+            border-radius: 50%;
         }
     </style>
 </head>
 <body>
     <video id="camera" autoplay playsinline></video>
-    <canvas id="overlay"></canvas>
+    <canvas id="mildot-grid"></canvas>
 
     <script>
-        // Uzyskaj dostęp do aparatu
-        const video = document.getElementById('camera');
-        const canvas = document.getElementById('overlay');
-        const context = canvas.getContext('2d');
+        // Access the device camera
+        const camera = document.getElementById('camera');
+        const gridCanvas = document.getElementById('mildot-grid');
+        const ctx = gridCanvas.getContext('2d');
 
-        // Dopasowanie płótna do okna
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        gridCanvas.width = window.innerWidth;
+        gridCanvas.height = window.innerHeight;
 
-        // Inicjalizacja aparatu
-        async function initCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-            } catch (error) {
-                console.error('Nie udało się uzyskać dostępu do aparatu:', error);
-            }
-        }
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                camera.srcObject = stream;
+            })
+            .catch(err => console.error("Camera access denied:", err));
 
-        // Rysowanie siatki mildot
-        function drawMildotGrid() {
-            const width = canvas.width;
-            const height = canvas.height;
+        // Draw the MilDot grid
+        function drawMilDotGrid() {
+            const dotSpacing = 50; // Adjust for your scaling
+            const dotRadius = 2;
 
-            context.clearRect(0, 0, width, height);
-            context.strokeStyle = 'lime';
-            context.lineWidth = 2;
+            // Clear previous grid
+            ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
 
-            const dotSpacing = 50; // Odległość między punktami w pikselach
-            const radius = 5; // Promień punktów
+            const centerX = gridCanvas.width / 2;
+            const centerY = gridCanvas.height / 2;
 
-            for (let x = dotSpacing; x < width; x += dotSpacing) {
-                for (let y = dotSpacing; y < height; y += dotSpacing) {
-                    context.beginPath();
-                    context.arc(x, y, radius, 0, Math.PI * 2);
-                    context.fillStyle = 'lime';
-                    context.fill();
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
+
+            for (let y = -gridCanvas.height / 2; y <= gridCanvas.height / 2; y += dotSpacing) {
+                for (let x = -gridCanvas.width / 2; x <= gridCanvas.width / 2; x += dotSpacing) {
+                    ctx.beginPath();
+                    ctx.arc(centerX + x, centerY + y, dotRadius, 0, Math.PI * 2);
+                    ctx.fill();
                 }
             }
         }
 
-        // Aktualizacja siatki na bieżąco
-        function animate() {
-            drawMildotGrid();
-            requestAnimationFrame(animate);
-        }
+        drawMilDotGrid();
 
-        // Start
-        initCamera();
-        animate();
+        // Redraw grid on resize
+        window.addEventListener('resize', () => {
+            gridCanvas.width = window.innerWidth;
+            gridCanvas.height = window.innerHeight;
+            drawMilDotGrid();
+        });
     </script>
 </body>
 </html>
