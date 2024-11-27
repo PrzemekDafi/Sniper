@@ -50,7 +50,7 @@
             try {
                 const constraints = {
                     video: {
-                        facingMode: "environment" // Tylna kamera
+                        facingMode: "environment" // Użycie tylnej kamery
                     }
                 };
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -61,11 +61,11 @@
                     const videoHeight = video.videoHeight;
                     const aspectRatio = videoWidth / videoHeight;
 
-                    // Zakładamy przykładowy FOV kamery (60 stopni poziomo, jeśli znasz parametry aparatu, zaktualizuj je)
+                    // Zakładany FOV kamery (60° poziomo - popraw, jeśli znasz dane kamery)
                     const horizontalFOV = 60; // Stopnie
                     const verticalFOV = horizontalFOV / aspectRatio;
 
-                    drawMilDot(aspectRatio, horizontalFOV, verticalFOV);
+                    drawMilDot(aspectRatio, horizontalFOV, verticalFOV, videoWidth, videoHeight);
                 });
             } catch (error) {
                 console.error('Nie udało się uruchomić kamery:', error);
@@ -73,15 +73,17 @@
             }
         }
 
-        function drawMilDot(aspectRatio, horizontalFOV, verticalFOV) {
+        function drawMilDot(aspectRatio, horizontalFOV, verticalFOV, videoWidth, videoHeight) {
             const milsPerDegree = 17.4533; // Przelicznik stopni na miliradiany
             const horizontalMils = horizontalFOV * milsPerDegree; // Szerokość w milsach
             const verticalMils = verticalFOV * milsPerDegree; // Wysokość w milsach
             const dotSpacing = 1; // Odstęp między środkami kropek w milsach
             const dotRadius = 0.2 / 2; // Promień kropki (0.2 mils średnicy)
 
-            // Ustawiamy właściwy widok SVG
-            reticle.setAttribute('viewBox', `-${horizontalMils / 2} -${verticalMils / 2} ${horizontalMils} ${verticalMils}`);
+            // Skalowanie siatki na podstawie proporcji kamery
+            const scaleX = videoWidth / horizontalMils;
+            const scaleY = videoHeight / verticalMils;
+            const scale = Math.min(scaleX, scaleY); // Zachowanie proporcji
 
             // Czyścimy siatkę
             while (reticle.firstChild) {
@@ -93,34 +95,32 @@
                 for (let x = -10; x <= 10; x++) {
                     if (x === 0 && y === 0) continue; // Pomijamy środek (główne krzyże są rysowane osobno)
 
-                    if (x === 0 || y === 0 || Math.abs(x) % 1 === 0 || Math.abs(y) % 1 === 0) {
-                        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                        dot.setAttribute("cx", x * dotSpacing);
-                        dot.setAttribute("cy", y * dotSpacing);
-                        dot.setAttribute("r", dotRadius);
-                        dot.setAttribute("fill", "red");
-                        reticle.appendChild(dot);
-                    }
+                    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dot.setAttribute("cx", x * dotSpacing * scale);
+                    dot.setAttribute("cy", y * dotSpacing * scale);
+                    dot.setAttribute("r", dotRadius * scale);
+                    dot.setAttribute("fill", "red");
+                    reticle.appendChild(dot);
                 }
             }
 
             // Linie główne (pozioma i pionowa)
             const mainLineX = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            mainLineX.setAttribute("x1", -horizontalMils / 2);
+            mainLineX.setAttribute("x1", -videoWidth / 2);
             mainLineX.setAttribute("y1", 0);
-            mainLineX.setAttribute("x2", horizontalMils / 2);
+            mainLineX.setAttribute("x2", videoWidth / 2);
             mainLineX.setAttribute("y2", 0);
             mainLineX.setAttribute("stroke", "red");
-            mainLineX.setAttribute("stroke-width", 0.1);
+            mainLineX.setAttribute("stroke-width", 2);
             reticle.appendChild(mainLineX);
 
             const mainLineY = document.createElementNS("http://www.w3.org/2000/svg", "line");
             mainLineY.setAttribute("x1", 0);
-            mainLineY.setAttribute("y1", -verticalMils / 2);
+            mainLineY.setAttribute("y1", -videoHeight / 2);
             mainLineY.setAttribute("x2", 0);
-            mainLineY.setAttribute("y2", verticalMils / 2);
+            mainLineY.setAttribute("y2", videoHeight / 2);
             mainLineY.setAttribute("stroke", "red");
-            mainLineY.setAttribute("stroke-width", 0.1);
+            mainLineY.setAttribute("stroke-width", 2);
             reticle.appendChild(mainLineY);
         }
 
