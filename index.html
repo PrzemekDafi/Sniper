@@ -3,132 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mil-Dot Spotter</title>
+    <title>Sniper Spotter</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background: black;
         }
-
-        #camera {
+        #video, #canvas {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            z-index: 1;
         }
-
-        #reticle {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
+        #canvas {
             pointer-events: none;
-        }
-
-        svg {
-            width: 100%;
-            height: 100%;
         }
     </style>
 </head>
 <body>
-    <video id="camera" autoplay playsinline></video>
-    <div id="reticle">
-        <svg id="mildotGrid" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" preserveAspectRatio="xMidYMid slice">
-            <!-- Siatka będzie dynamicznie rysowana w JavaScript -->
-        </svg>
-    </div>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+
     <script>
-        const video = document.getElementById('camera');
-        const reticle = document.getElementById('mildotGrid');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
 
-        async function startCamera() {
-            try {
-                const constraints = {
-                    video: {
-                        facingMode: "environment" // Automatyczne ustawienie na tylnią kamerę
-                    }
-                };
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        // Access the rear camera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(stream => {
                 video.srcObject = stream;
-
-                // Czekamy na rozpoczęcie wyświetlania obrazu, aby pobrać proporcje
                 video.addEventListener('loadedmetadata', () => {
-                    const videoWidth = video.videoWidth;
-                    const videoHeight = video.videoHeight;
-                    const aspectRatio = videoWidth / videoHeight;
-
-                    console.log(`Kamera włączona. Proporcje: ${aspectRatio}`);
-                    drawMilDot(aspectRatio);
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    drawMildotGrid();
                 });
-            } catch (error) {
-                console.error('Nie udało się uruchomić kamery:', error);
-                alert('Błąd: nie można uzyskać dostępu do kamery.');
+            })
+            .catch(err => console.error("Error accessing camera: ", err));
+
+        // Draw mildot grid
+        function drawMildotGrid() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const milsPerDot = 1; // Distance between mildots in miliradians
+            const scale = width / 20; // Approx. 1 mil = width / 20 (adjust as needed)
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = "rgba(0, 255, 0, 0.8)";
+            ctx.lineWidth = 2;
+
+            // Draw horizontal and vertical lines
+            for (let i = -10; i <= 10; i++) {
+                const offset = i * scale;
+
+                // Vertical lines
+                ctx.beginPath();
+                ctx.moveTo(centerX + offset, 0);
+                ctx.lineTo(centerX + offset, height);
+                ctx.stroke();
+
+                // Horizontal lines
+                ctx.beginPath();
+                ctx.moveTo(0, centerY + offset);
+                ctx.lineTo(width, centerY + offset);
+                ctx.stroke();
             }
-        }
 
-        function drawMilDot(aspectRatio) {
-            const gridSize = 10; // Wymiary siatki w mils (10x10 mils)
-            const dotSize = 0.2; // Rozmiar kropek w mils (stały)
-            const spacing = 1; // Odległość między środkami kropek w mils (stały)
-
-            // Ustawienie proporcji SVG, aby odpowiadały proporcjom kamery
-            reticle.setAttribute('viewBox', `-${gridSize} -${gridSize / aspectRatio} ${gridSize * 2} ${gridSize * 2 / aspectRatio}`);
-
-            // Usuń istniejącą siatkę
-            while (reticle.firstChild) {
-                reticle.removeChild(reticle.firstChild);
-            }
-
-            // Linie główne (pozioma i pionowa)
-            const mainLineX = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            mainLineX.setAttribute("x1", -gridSize);
-            mainLineX.setAttribute("y1", 0);
-            mainLineX.setAttribute("x2", gridSize);
-            mainLineX.setAttribute("y2", 0);
-            mainLineX.setAttribute("stroke", "red");
-            mainLineX.setAttribute("stroke-width", 0.05);
-            reticle.appendChild(mainLineX);
-
-            const mainLineY = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            mainLineY.setAttribute("x1", 0);
-            mainLineY.setAttribute("y1", -gridSize / aspectRatio);
-            mainLineY.setAttribute("x2", 0);
-            mainLineY.setAttribute("y2", gridSize / aspectRatio);
-            mainLineY.setAttribute("stroke", "red");
-            mainLineY.setAttribute("stroke-width", 0.05);
-            reticle.appendChild(mainLineY);
-
-            // Kropki (poziome i pionowe)
-            for (let i = -gridSize; i <= gridSize; i++) {
-                if (i !== 0) {
-                    // Kropki poziome
-                    const dotX = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    dotX.setAttribute("cx", i * spacing);
-                    dotX.setAttribute("cy", 0);
-                    dotX.setAttribute("r", dotSize / 2);
-                    dotX.setAttribute("fill", "red");
-                    reticle.appendChild(dotX);
-
-                    // Kropki pionowe
-                    const dotY = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    dotY.setAttribute("cx", 0);
-                    dotY.setAttribute("cy", i * spacing / aspectRatio);
-                    dotY.setAttribute("r", dotSize / 2);
-                    dotY.setAttribute("fill", "red");
-                    reticle.appendChild(dotY);
+            // Draw dots at intersections
+            ctx.fillStyle = "rgba(0, 255, 0, 0.8)";
+            for (let i = -10; i <= 10; i++) {
+                for (let j = -10; j <= 10; j++) {
+                    ctx.beginPath();
+                    ctx.arc(centerX + i * scale, centerY + j * scale, 3, 0, 2 * Math.PI);
+                    ctx.fill();
                 }
             }
         }
-
-        // Start kamery i rysowanie siatki
-        startCamera();
     </script>
 </body>
 </html>
