@@ -36,7 +36,7 @@
     </style>
 </head>
 <body>
-    <video id="camera" autoplay></video>
+    <video id="camera" autoplay playsinline></video>
     <div id="reticle">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" preserveAspectRatio="xMidYMid meet">
             <!-- Główne linie krzyża -->
@@ -78,14 +78,16 @@
     <script>
         const video = document.getElementById('camera');
 
-        // Uruchom kamerę
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                video.srcObject = stream;
-            })
-            .catch(error => {
-                console.error("Error accessing the camera", error);
-            });
+        // Uruchom kamerę z wymuszeniem tylnej kamery
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { exact: "environment" } }
+        })
+        .then(stream => {
+            video.srcObject = stream;
+        })
+        .catch(error => {
+            console.error("Error accessing the camera:", error);
+        });
     </script>
 </body>
 </html>
