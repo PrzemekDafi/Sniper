@@ -40,9 +40,7 @@
 <body>
     <video id="camera" autoplay playsinline></video>
     <div id="reticle">
-        <svg id="mildotGrid" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" preserveAspectRatio="xMidYMid slice">
-            <!-- Siatka będzie dynamicznie rysowana w JavaScript -->
-        </svg>
+        <svg id="mildotGrid" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice"></svg>
     </div>
     <script>
         const video = document.getElementById('camera');
@@ -52,20 +50,24 @@
             try {
                 const constraints = {
                     video: {
-                        facingMode: "environment" // Automatyczne ustawienie na tylnią kamerę
+                        facingMode: "environment" // Tylna kamera
                     }
                 };
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
 
-                // Czekamy na rozpoczęcie wyświetlania obrazu, aby pobrać proporcje
                 video.addEventListener('loadedmetadata', () => {
                     const videoWidth = video.videoWidth;
                     const videoHeight = video.videoHeight;
                     const aspectRatio = videoWidth / videoHeight;
 
                     console.log(`Kamera włączona. Proporcje: ${aspectRatio}`);
-                    drawMilDot(aspectRatio);
+                    
+                    // Zakładamy przykładowy FOV kamery (np. 60 stopni w poziomie, zmień jeśli znasz dane urządzenia)
+                    const horizontalFOV = 60; // Stopnie
+                    const verticalFOV = horizontalFOV / aspectRatio;
+
+                    drawMilDot(aspectRatio, horizontalFOV, verticalFOV);
                 });
             } catch (error) {
                 console.error('Nie udało się uruchomić kamery:', error);
@@ -73,54 +75,56 @@
             }
         }
 
-        function drawMilDot(aspectRatio) {
-            const gridSize = 10; // Wymiary siatki w mils (10x10 mils)
-            const dotSize = 0.2; // Rozmiar kropek w mils (stały)
-            const spacing = 1; // Odległość między środkami kropek w mils (stały)
+        function drawMilDot(aspectRatio, horizontalFOV, verticalFOV) {
+            const milsPerDegree = 17.4533; // Przelicznik stopni na miliradiany
+            const horizontalMils = horizontalFOV * milsPerDegree; // Szerokość w milsach
+            const verticalMils = verticalFOV * milsPerDegree; // Wysokość w milsach
+            const dotSpacing = 1; // Odstęp między środkami kropek w milsach
+            const dotRadius = 0.2 / 2; // Promień kropki (0.2 mils średnicy)
 
-            // Ustawienie proporcji SVG, aby odpowiadały proporcjom kamery
-            reticle.setAttribute('viewBox', `-${gridSize} -${gridSize / aspectRatio} ${gridSize * 2} ${gridSize * 2 / aspectRatio}`);
+            // Ustawiamy właściwy widok SVG
+            reticle.setAttribute('viewBox', `-${horizontalMils / 2} -${verticalMils / 2} ${horizontalMils} ${verticalMils}`);
 
-            // Usuń istniejącą siatkę
+            // Czyścimy siatkę
             while (reticle.firstChild) {
                 reticle.removeChild(reticle.firstChild);
             }
 
             // Linie główne (pozioma i pionowa)
             const mainLineX = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            mainLineX.setAttribute("x1", -gridSize);
+            mainLineX.setAttribute("x1", -horizontalMils / 2);
             mainLineX.setAttribute("y1", 0);
-            mainLineX.setAttribute("x2", gridSize);
+            mainLineX.setAttribute("x2", horizontalMils / 2);
             mainLineX.setAttribute("y2", 0);
             mainLineX.setAttribute("stroke", "red");
-            mainLineX.setAttribute("stroke-width", 0.05);
+            mainLineX.setAttribute("stroke-width", 0.1);
             reticle.appendChild(mainLineX);
 
             const mainLineY = document.createElementNS("http://www.w3.org/2000/svg", "line");
             mainLineY.setAttribute("x1", 0);
-            mainLineY.setAttribute("y1", -gridSize / aspectRatio);
+            mainLineY.setAttribute("y1", -verticalMils / 2);
             mainLineY.setAttribute("x2", 0);
-            mainLineY.setAttribute("y2", gridSize / aspectRatio);
+            mainLineY.setAttribute("y2", verticalMils / 2);
             mainLineY.setAttribute("stroke", "red");
-            mainLineY.setAttribute("stroke-width", 0.05);
+            mainLineY.setAttribute("stroke-width", 0.1);
             reticle.appendChild(mainLineY);
 
-            // Kropki (poziome i pionowe)
-            for (let i = -gridSize; i <= gridSize; i++) {
+            // Rysowanie kropek
+            for (let i = -10; i <= 10; i++) {
                 if (i !== 0) {
-                    // Kropki poziome
+                    // Poziome kropki
                     const dotX = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    dotX.setAttribute("cx", i * spacing);
+                    dotX.setAttribute("cx", i * dotSpacing);
                     dotX.setAttribute("cy", 0);
-                    dotX.setAttribute("r", dotSize / 2);
+                    dotX.setAttribute("r", dotRadius);
                     dotX.setAttribute("fill", "red");
                     reticle.appendChild(dotX);
 
-                    // Kropki pionowe
+                    // Pionowe kropki
                     const dotY = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     dotY.setAttribute("cx", 0);
-                    dotY.setAttribute("cy", i * spacing / aspectRatio);
-                    dotY.setAttribute("r", dotSize / 2);
+                    dotY.setAttribute("cy", i * dotSpacing);
+                    dotY.setAttribute("r", dotRadius);
                     dotY.setAttribute("fill", "red");
                     reticle.appendChild(dotY);
                 }
@@ -131,4 +135,4 @@
         startCamera();
     </script>
 </body>
-    </html>
+</html>
