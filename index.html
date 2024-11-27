@@ -39,55 +39,34 @@
     <video id="camera" autoplay playsinline></video>
     <div id="reticle">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" preserveAspectRatio="xMidYMid meet">
-            <!-- Główne linie krzyża -->
+            <!-- Siatka Mil-Dot tutaj -->
             <line x1="-10" y1="0" x2="10" y2="0" stroke="black" stroke-width="0.02" />
             <line x1="0" y1="-10" x2="0" y2="10" stroke="black" stroke-width="0.02" />
-
-            <!-- Kropki w poziomie -->
-            <!-- Po prawej stronie -->
             <circle cx="1" cy="0" r="0.1" fill="black" />
             <circle cx="2" cy="0" r="0.1" fill="black" />
-            <circle cx="3" cy="0" r="0.1" fill="black" />
-            <circle cx="4" cy="0" r="0.1" fill="black" />
-            <circle cx="5" cy="0" r="0.1" fill="black" />
-            <!-- Po lewej stronie -->
             <circle cx="-1" cy="0" r="0.1" fill="black" />
             <circle cx="-2" cy="0" r="0.1" fill="black" />
-            <circle cx="-3" cy="0" r="0.1" fill="black" />
-            <circle cx="-4" cy="0" r="0.1" fill="black" />
-            <circle cx="-5" cy="0" r="0.1" fill="black" />
-
-            <!-- Kropki w pionie -->
-            <!-- Powyżej centrum -->
             <circle cx="0" cy="1" r="0.1" fill="black" />
             <circle cx="0" cy="2" r="0.1" fill="black" />
-            <circle cx="0" cy="3" r="0.1" fill="black" />
-            <circle cx="0" cy="4" r="0.1" fill="black" />
-            <circle cx="0" cy="5" r="0.1" fill="black" />
-            <!-- Poniżej centrum -->
             <circle cx="0" cy="-1" r="0.1" fill="black" />
             <circle cx="0" cy="-2" r="0.1" fill="black" />
-            <circle cx="0" cy="-3" r="0.1" fill="black" />
-            <circle cx="0" cy="-4" r="0.1" fill="black" />
-            <circle cx="0" cy="-5" r="0.1" fill="black" />
-
-            <!-- Okrąg centralny dla ułatwienia celowania -->
-            <circle cx="0" cy="0" r="5" stroke="black" stroke-width="0.02" fill="none" />
         </svg>
     </div>
     <script>
         const video = document.getElementById('camera');
 
-        // Uruchom kamerę z wymuszeniem tylnej kamery
-        navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { exact: "environment" } }
-        })
-        .then(stream => {
-            video.srcObject = stream;
-        })
-        .catch(error => {
-            console.error("Error accessing the camera:", error);
-        });
-    </script>
-</body>
-</html>
+        // Funkcja do wybrania tylnej kamery
+        async function startCamera() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                let backCamera = videoDevices.find(device => device.label.toLowerCase().includes('back')) || videoDevices[0];
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: backCamera.deviceId ? { exact: backCamera.deviceId } : undefined }
+                });
+
+                video.srcObject = stream;
+            } catch (error) {
+                console.error('Error accessing the camera:', error);
+                alert('Unable to
