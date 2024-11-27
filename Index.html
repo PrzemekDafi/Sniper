@@ -38,53 +38,47 @@
 <body>
     <video id="camera" autoplay></video>
     <div id="reticle">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
-            <!-- Główne linie -->
-            <line x1="0" y1="100" x2="200" y2="100" stroke="black" stroke-width="0.5" />
-            <line x1="100" y1="0" x2="100" y2="200" stroke="black" stroke-width="0.5" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20" preserveAspectRatio="xMidYMid meet">
+            <!-- Główne linie krzyża -->
+            <line x1="-10" y1="0" x2="10" y2="0" stroke="black" stroke-width="0.02" />
+            <line x1="0" y1="-10" x2="0" y2="10" stroke="black" stroke-width="0.02" />
 
-            <!-- Kropki poziome -->
-            <circle cx="110" cy="100" r="0.5" fill="black" />
-            <circle cx="120" cy="100" r="0.5" fill="black" />
-            <circle cx="130" cy="100" r="0.5" fill="black" />
-            <circle cx="140" cy="100" r="0.5" fill="black" />
-            <circle cx="150" cy="100" r="0.5" fill="black" />
-            <circle cx="90" cy="100" r="0.5" fill="black" />
-            <circle cx="80" cy="100" r="0.5" fill="black" />
-            <circle cx="70" cy="100" r="0.5" fill="black" />
-            <circle cx="60" cy="100" r="0.5" fill="black" />
-            <circle cx="50" cy="100" r="0.5" fill="black" />
+            <!-- Kropki w poziomie -->
+            <!-- Po prawej stronie -->
+            <circle cx="1" cy="0" r="0.1" fill="black" />
+            <circle cx="2" cy="0" r="0.1" fill="black" />
+            <circle cx="3" cy="0" r="0.1" fill="black" />
+            <circle cx="4" cy="0" r="0.1" fill="black" />
+            <circle cx="5" cy="0" r="0.1" fill="black" />
+            <!-- Po lewej stronie -->
+            <circle cx="-1" cy="0" r="0.1" fill="black" />
+            <circle cx="-2" cy="0" r="0.1" fill="black" />
+            <circle cx="-3" cy="0" r="0.1" fill="black" />
+            <circle cx="-4" cy="0" r="0.1" fill="black" />
+            <circle cx="-5" cy="0" r="0.1" fill="black" />
 
-            <!-- Kropki pionowe -->
-            <circle cx="100" cy="110" r="0.5" fill="black" />
-            <circle cx="100" cy="120" r="0.5" fill="black" />
-            <circle cx="100" cy="130" r="0.5" fill="black" />
-            <circle cx="100" cy="140" r="0.5" fill="black" />
-            <circle cx="100" cy="150" r="0.5" fill="black" />
-            <circle cx="100" cy="90" r="0.5" fill="black" />
-            <circle cx="100" cy="80" r="0.5" fill="black" />
-            <circle cx="100" cy="70" r="0.5" fill="black" />
-            <circle cx="100" cy="60" r="0.5" fill="black" />
-            <circle cx="100" cy="50" r="0.5" fill="black" />
+            <!-- Kropki w pionie -->
+            <!-- Powyżej centrum -->
+            <circle cx="0" cy="1" r="0.1" fill="black" />
+            <circle cx="0" cy="2" r="0.1" fill="black" />
+            <circle cx="0" cy="3" r="0.1" fill="black" />
+            <circle cx="0" cy="4" r="0.1" fill="black" />
+            <circle cx="0" cy="5" r="0.1" fill="black" />
+            <!-- Poniżej centrum -->
+            <circle cx="0" cy="-1" r="0.1" fill="black" />
+            <circle cx="0" cy="-2" r="0.1" fill="black" />
+            <circle cx="0" cy="-3" r="0.1" fill="black" />
+            <circle cx="0" cy="-4" r="0.1" fill="black" />
+            <circle cx="0" cy="-5" r="0.1" fill="black" />
 
-            <!-- Okrąg -->
-            <circle cx="100" cy="100" r="50" stroke="black" stroke-width="0.5" fill="none" />
-
-            <!-- Krzyże na krawędziach -->
-            <!-- Góra -->
-            <line x1="100" y1="5" x2="100" y2="15" stroke="black" stroke-width="0.5" />
-            <!-- Dół -->
-            <line x1="100" y1="185" x2="100" y2="195" stroke="black" stroke-width="0.5" />
-            <!-- Lewa -->
-            <line x1="5" y1="100" x2="15" y2="100" stroke="black" stroke-width="0.5" />
-            <!-- Prawa -->
-            <line x1="185" y1="100" x2="195" y2="100" stroke="black" stroke-width="0.5" />
+            <!-- Okrąg centralny dla ułatwienia celowania -->
+            <circle cx="0" cy="0" r="5" stroke="black" stroke-width="0.02" fill="none" />
         </svg>
     </div>
     <script>
         const video = document.getElementById('camera');
 
-        // Request access to the user's camera
+        // Uruchom kamerę
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
                 video.srcObject = stream;
