@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MilDot Grid</title>
+    <title>MilDot Reticle</title>
     <style>
         body, html {
             margin: 0;
@@ -49,48 +49,50 @@
             .catch(err => console.error("Camera access denied:", err));
 
         function drawMilDotGrid() {
-            const dotSpacing = 50; // Odległość między kropkami w pikselach
-            const dotRadius = 2; // Promień kropek
-            const centerX = gridCanvas.width / 2;
-            const centerY = gridCanvas.height / 2;
+            const width = gridCanvas.width;
+            const height = gridCanvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
 
-            ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+            ctx.clearRect(0, 0, width, height);
 
-            ctx.fillStyle = 'rgba(0, 255, 0, 0.8)';
             ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.8)';
             ctx.lineWidth = 1;
 
-            // Rysuj kropki
-            for (let x = -10; x <= 10; x++) {
-                for (let y = -10; y <= 10; y++) {
-                    const posX = centerX + x * dotSpacing;
-                    const posY = centerY + y * dotSpacing;
+            const dotSpacing = 30; // Odległość między kropkami (piksele)
+            const dotRadius = 3; // Promień kropek
+            const lineLength = 15; // Długość małych linii na krzyżu
 
-                    // Rysuj linie osi głównych
-                    if (x === 0 || y === 0) {
-                        ctx.beginPath();
-                        ctx.moveTo(posX, centerY - 5);
-                        ctx.lineTo(posX, centerY + 5);
-                        ctx.moveTo(centerX - 5, posY);
-                        ctx.lineTo(centerX + 5, posY);
-                        ctx.stroke();
-                    }
+            // Rysuj poziome i pionowe linie siatki
+            ctx.beginPath();
+            ctx.moveTo(centerX - 300, centerY);
+            ctx.lineTo(centerX + 300, centerY);
+            ctx.moveTo(centerX, centerY - 300);
+            ctx.lineTo(centerX, centerY + 300);
+            ctx.stroke();
 
-                    // Rysuj kropki z wyjątkiem centralnego punktu
-                    if (!(x === 0 && y === 0)) {
-                        ctx.beginPath();
-                        ctx.arc(posX, posY, dotRadius, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
+            // Rysuj kropki siatki
+            for (let i = -10; i <= 10; i++) {
+                if (i !== 0) { // Omiń środek (centralny krzyż)
+                    // Poziome kropki
+                    ctx.beginPath();
+                    ctx.arc(centerX + i * dotSpacing, centerY, dotRadius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Pionowe kropki
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY + i * dotSpacing, dotRadius, 0, Math.PI * 2);
+                    ctx.fill();
                 }
             }
 
-            // Centralny krzyż
+            // Rysuj centralny krzyż
             ctx.beginPath();
-            ctx.moveTo(centerX - 10, centerY);
-            ctx.lineTo(centerX + 10, centerY);
-            ctx.moveTo(centerX, centerY - 10);
-            ctx.lineTo(centerX, centerY + 10);
+            ctx.moveTo(centerX - lineLength, centerY);
+            ctx.lineTo(centerX + lineLength, centerY);
+            ctx.moveTo(centerX, centerY - lineLength);
+            ctx.lineTo(centerX, centerY + lineLength);
             ctx.stroke();
         }
 
