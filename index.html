@@ -3,162 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mil-Dot Spotter</title>
+    <title>Mildot Spotter</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background: black;
         }
-
-        #camera {
+        video {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             z-index: 1;
         }
-
-        #reticle {
+        canvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 2;
-            pointer-events: none;
         }
-
-        svg {
-            width: 100%;
-            height: 100%;
-            transform-origin: center;
-        }
-
         #controls {
             position: absolute;
             bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 3;
             background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
             color: white;
+            padding: 10px;
+            border-radius: 10px;
+            z-index: 3;
             font-family: Arial, sans-serif;
-        }
-
-        #controls label {
-            margin-right: 10px;
-        }
-
-        #zoomValue {
-            margin-left: 10px;
-            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <video id="camera" autoplay playsinline></video>
-    <div id="reticle">
-        <svg id="mildotGrid" xmlns="http://www.w3.org/2000/svg"></svg>
-    </div>
+    <canvas id="overlay"></canvas>
     <div id="controls">
-        <label for="zoom">Scale:</label>
-        <input type="range" id="zoom" min="0.5" max="3" step="0.01" value="1">
-        <span>Zoom:</span><span id="zoomValue">1.0</span>
+        <label for="scale">Scale: </label>
+        <input type="range" id="scale" min="0.5" max="3" step="0.01" value="1">
+        <span id="zoomLevel">1x</span>
     </div>
     <script>
         const video = document.getElementById('camera');
-        const reticle = document.getElementById('mildotGrid');
-        const zoomInput = document.getElementById('zoom');
-        const zoomValue = document.getElementById('zoomValue');
+        const canvas = document.getElementById('overlay');
+        const ctx = canvas.getContext('2d');
+        const scaleInput = document.getElementById('scale');
+        const zoomLevel = document.getElementById('zoomLevel');
 
-        let scaleFactor = 1;
-
-        async function startCamera() {
-            try {
-                const constraints = {
-                    video: {
-                        facingMode: "environment", // Tylna kamera
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    }
-                };
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                video.srcObject = stream;
-
-                video.addEventListener('loadedmetadata', () => {
-                    const aspectRatio = video.videoWidth / video.videoHeight;
-                    drawMilDot(aspectRatio);
-                });
-            } catch (error) {
-                console.error("Błąd kamery:", error);
-            }
-        }
-
-        function drawMilDot(aspectRatio) {
-            const width = 100; // Bazowa szerokość siatki w mils
-            const height = width / aspectRatio; // Wysokość siatki uwzględniająca proporcje
-
-            const spacing = 10; // Odstęp między kropkami w pikselach (1 mils)
-            const dotSize = spacing * 0.2; // Średnica kropki (0.2 mils)
-
-            reticle.innerHTML = ""; // Czyść siatkę
-
-            const svgNS = "http://www.w3.org/2000/svg";
-            const svg = document.createElementNS(svgNS, "svg");
-            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-            svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-
-            // Linie siatki
-            for (let x = 0; x <= width; x += spacing) {
-                const line = document.createElementNS(svgNS, "line");
-                line.setAttribute("x1", x);
-                line.setAttribute("y1", 0);
-                line.setAttribute("x2", x);
-                line.setAttribute("y2", height);
-                line.setAttribute("stroke", "lime");
-                line.setAttribute("stroke-width", x === width / 2 ? 2 : 0.5); // Grubsza linia środkowa
-                svg.appendChild(line);
-            }
-
-            for (let y = 0; y <= height; y += spacing) {
-                const line = document.createElementNS(svgNS, "line");
-                line.setAttribute("x1", 0);
-                line.setAttribute("y1", y);
-                line.setAttribute("x2", width);
-                line.setAttribute("y2", y);
-                line.setAttribute("stroke", "lime");
-                line.setAttribute("stroke-width", y === height / 2 ? 2 : 0.5); // Grubsza linia środkowa
-                svg.appendChild(line);
-            }
-
-            // Kropki
-            for (let x = spacing; x < width; x += spacing) {
-                for (let y = spacing; y < height; y += spacing) {
-                    const dot = document.createElementNS(svgNS, "circle");
-                    dot.setAttribute("cx", x);
-                    dot.setAttribute("cy", y);
-                    dot.setAttribute("r", dotSize / 2);
-                    dot.setAttribute("fill", "lime");
-                    svg.appendChild(dot);
+        // Initialize camera
+        async function initCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { ideal: "environment" },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
                 }
-            }
-
-            reticle.appendChild(svg);
+            });
+            video.srcObject = stream;
         }
 
-        // Obsługa skalowania
-        zoomInput.addEventListener("input", () => {
-            scaleFactor = parseFloat(zoomInput.value);
-            reticle.style.transform = `scale(${scaleFactor})`;
-            zoomValue.textContent = scaleFactor.toFixed(1);
+        // Draw mildot reticle
+        function drawMildot(scale) {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Clear previous drawing
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw outer circle
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) * 0.4 * scale;
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+
+            // Draw crosshairs
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, height);
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(width, centerY);
+            ctx.stroke();
+
+            // Draw dots
+            const dotRadius = 0.02 * radius; // 0.2 mils
+            const spacing = 0.1 * radius; // 1 mil
+            ctx.fillStyle = "white";
+
+            for (let i = -10; i <= 10; i++) {
+                if (i === 0) continue; // Skip center dot
+                const offset = i * spacing;
+                // Horizontal dots
+                ctx.beginPath();
+                ctx.arc(centerX + offset, centerY, dotRadius, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(centerX - offset, centerY, dotRadius, 0, 2 * Math.PI);
+                ctx.fill();
+                // Vertical dots
+                ctx.beginPath();
+                ctx.arc(centerX, centerY + offset, dotRadius, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(centerX, centerY - offset, dotRadius, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+
+        // Update canvas on scale change
+        scaleInput.addEventListener('input', (e) => {
+            const scale = parseFloat(e.target.value);
+            zoomLevel.textContent = `${scale.toFixed(1)}x`;
+            drawMildot(scale);
         });
 
-        startCamera();
+        // Initialize app
+        initCamera().then(() => drawMildot(1));
     </script>
 </body>
-</html>
+    </html>
