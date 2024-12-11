@@ -89,7 +89,7 @@
 
         function drawScene(scene) {
             const background = new Image();
-            background.src = `scenes/${scene}.png`;
+            background.src = `img/${scene}.png`;
             background.onload = () => {
                 ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
             };
